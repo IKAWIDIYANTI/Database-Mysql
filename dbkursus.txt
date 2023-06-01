@@ -1,0 +1,129 @@
+-- Membuat tabel database dengan diagram di MySQLWorkbench
+
+Tabel "kategori":
+kategori_id (PK, INT)
+nama_kategori (VARCHAR)
+Tabel "materi":
+
+materi_id (PK, INT)
+kode_kategori (FK, INT)
+nama_materi (VARCHAR)
+deskripsi (TEXT)
+durasi_jam (INT)
+biaya (INT)
+Tabel "pengajar":
+
+pengajar_id (PK, INT)
+nip (VARCHAR)
+nama_pengajar (VARCHAR)
+gender (VARCHAR)
+hp (VARCHAR)
+email (VARCHAR)
+alamat (TEXT)
+foto (VARCHAR)
+Tabel "peserta":
+
+peserta_id (PK, INT)
+nama_peserta (VARCHAR)
+gender (VARCHAR)
+hp (VARCHAR)
+email (VARCHAR)
+alamat (TEXT)
+foto (VARCHAR)
+Tabel "penjadwalan_kelas":
+
+id (PK, INT)
+kode_kelas (VARCHAR)
+kelas (VARCHAR)
+hari (VARCHAR)
+tgl_mulai (DATE)
+tgl_akhir (DATE)
+jam_mulai (TIME)
+jam_akhir (TIME)
+materi_id (FK, INT)
+pengajar_id (FK, INT)
+peserta_id (FK, INT)
+
+
+--Penjelasan relasi tabel-tabel tersebut
+
+Tabel kategori_kursus memiliki relasi one-to-many dengan tabel materi, dimana satu kategori kursus memiliki banyak materi kursus.
+
+Tabel materi memiliki relasi many-to-many dengan tabel pengajar, dimana satu materi bisa diajarkan oleh banyak pengajar dan satu pengajar bisa mengajar banyak materi.
+
+Tabel materi memiliki relasi many-to-many dengan tabel peserta, dimana satu materi bisa diikuti oleh banyak peserta dan satu peserta bisa mengikuti banyak materi.
+
+Tabel penjadwalan_kelas memiliki relasi many-to-one dengan tabel materi dan pengajar, dimana satu materi dan satu pengajar bisa memiliki banyak penjadwalan kelas.
+
+Tabel penjadwalan_kelas memiliki relasi many-to-many dengan tabel peserta, dimana satu penjadwalan kelas bisa diikuti oleh banyak peserta dan satu peserta bisa mengikuti banyak penjadwalan kelas.
+
+-- menginput data ke dalam tabel-tabel yang telah dibuat
+Tabel "kategori":
+INSERT INTO kategori (nama_kategori)
+VALUES ('programming'), ('database'), ('networking'), ('aplikasi perkantoran'), ('desain grafis');
+
+Tabel "materi":
+INSERT INTO materi (id, nama_materi, deskripsi, durasi_jam, biaya, kategori_id)
+VALUES (1, 'python', 'Python programming language', 30, 500000, 1),
+       (2, 'java', 'Java programming language', 40, 600000, 1),
+       (3, 'php', 'PHP programming language', 25, 450000, 1),
+       (4, 'PostgreSQL', 'PostgreSQL database management system', 35, 550000, 2),
+       (5, 'MariaDB', 'MariaDB database management system', 30, 500000, 2),
+       (6, 'SQL Server', 'Microsoft SQL Server database management system', 45, 700000, 2)
+ON DUPLICATE KEY UPDATE kategori_id = VALUES(kategori_id);
+ALTER TABLE materi ADD FOREIGN KEY (kategori_id) REFERENCE kategori(id)
+
+ 
+Tabel "pengajar":
+INSERT INTO pengajar (nip, nama_pengajar, gender, hp, email, alamat, foto)
+VALUES ('123456', 'John Doe', 'Male', '08123456789', 'john.doe@example.com', 'Jl. ABC No. 123', 'john.jpg'),
+       ('654321', 'Jane Smith', 'Female', '081234567890', 'jane.smith@example.com', 'Jl. XYZ No. 456', 'jane.jpg');
+
+
+- Tabel "peserta":
+
+INSERT INTO peserta (nama_peserta, gender, hp, email, alamat, foto)
+VALUES ('Alice Johnson', 'Female', '087654321', 'alice.johnson@example.com', 'Jl. PQR No. 789', 'alice.jpg'),
+       ('Bob Anderson', 'Male', '087765432', 'bob.anderson@example.com', 'Jl. UVW No. 987', 'bob.jpg');
+
+Tabel "penjadwalan_kelas":
+INSERT INTO penjadwalan_kelas (kode_kelas, kelas, hari, tgl_mulai, tgl_akhir, jam_mulai, jam_akhir, materi_id, pengajar_id, peserta_id)
+VALUES ('KLS001', 'Kelas Pemrograman', 'Senin', '2023-06-01', '2023-06-30', '08:00:00', '12:00:00', 1, 1, 1),
+       ('KLS002', 'Kelas Database', 'Selasa', '2023-06-02', '2023-06-30', '13:00:00', '15:00:00', 4, 2, 2)
+ON DUPLICATE KEY UPDATE
+    materi_id = VALUES(materi_id),
+    pengajar_id = VALUES(pengajar_id),
+    peserta_id = VALUES(peserta_id);
+ALTER TABLE penjadwalan_kelas ADD FOREIGN KEY (materi_id) REFERENCE materi(id)
+ALTER TABLE penjadwalan_kelas ADD FOREIGN KEY (pengajar_id) REFERENCE pengajar(id)
+ALTER TABLE penjadwalan_kelas ADD FOREIGN KEY (peserta_id) REFERENCE peserta(id)
+
+--Membuat INNER JOIN
+
+Query Inner Join antara Tabel "kategori" dan "materi":
+SELECT k.nama_kategori, m.nama_materi, m.deskripsi, m.durasi_jam, m.biaya
+FROM kategori k
+INNER JOIN materi m ON k.kategori_id = m.kode_kategori;
+
+Query Inner Join antara Tabel "kategori", "materi", "pengajar", "peserta", dan "penjadwalan_kelas":
+SELECT k.nama_kategori, m.nama_materi, p.nama_pengajar, ps.nama_peserta, pk.kode_kelas
+FROM kategori k
+INNER JOIN materi m ON k.kategori_id = m.kode_kategori
+INNER JOIN penjadwalan_kelas pk ON m.materi_id = pk.materi_id
+INNER JOIN pengajar p ON pk.pengajar_id = p.pengajar_id
+INNER JOIN peserta ps ON pk.peserta_id = ps.peserta_id;
+
+Query Inner Join antara Tabel "kategori", "materi", "pengajar", "peserta", dan "penjadwalan_kelas" dengan pengaliasan nama tabel:
+sql
+SELECT k.nama_kategori, m.nama_materi, p.nama_pengajar, ps.nama_peserta, pk.kode_kelas
+FROM kategori AS k
+INNER JOIN materi AS m ON k.kategori_id = m.kode_kategori
+INNER JOIN penjadwalan_kelas AS pk ON m.materi_id = pk.materi_id
+INNER JOIN pengajar AS p ON pk.pengajar_id = p.pengajar_id
+INNER JOIN peserta AS ps ON pk.peserta_id = ps.peserta_id;
+
+
+
+
+
+
